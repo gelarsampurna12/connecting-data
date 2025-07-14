@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Connect Base</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <style>
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      background-color: #f3f4f6;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .bg-gray-white{
+      background-color: #f8f8fb;
+    }
+    .filter-btn.active {
+      background-color: #22c55e;
+      color: #fff;
+    }
+    
+    .view-btn.active{
+      background-color: #22c55e;
+      color: white;
+      border-color: #059669;
+    }
+
+    .filter-btn {
+      @apply px-3 py-1 rounded border text-sm text-gray-700 hover:bg-green-100;
+    }
+
+    .filter-btn.active {
+      @apply bg-green-600 text-white border-green-700;
+    }
+    button:hover box-icon {
+      filter: brightness(0.9);
+    }
+    .upload-toggle {
+      transition: all 0.3s ease;
+    }
+
+    .upload-toggle.active {
+      background-color: #f9bf4b; 
+      color: white;
+      border-color: none;
+    }
+
+    .upload-toggle {
+      transition: all 0.3s ease;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+  <div class="flex min-h-screen">
+    <aside class="w-16 md:w-64 bg-gray-white border-r shadow-lg fixed h-full z-10">
+      <div class="flex flex-col items-center md:items-start p-4 gap-6">
+        <img src="/images/logo smi 46.png" alt="Logo SMI 46" class="w-12 md:w-24">
+        <div class="text-xl font-bold hidden md:block">Connecting Base Data</div>
+        <nav class="flex flex-col gap-4 mt-4 w-full">
+          <!-- Tombol Beranda -->
+          <button class="flex items-center gap-2 px-2 py-2 hover:bg-green-100 rounded" onclick="loadData('all')">
+            <i class='bx bx-home text-lg'></i>
+            <span class="hidden md:inline">Beranda</span>
+          </button>
+          <!-- Tombol Upload -->
+          <button class="flex items-center gap-2 px-2 py-2 hover:bg-green-100 rounded" onclick="togglePilihanUpload()">
+            <i class='bx bx-plus text-lg'></i>
+            <span class="hidden md:inline">Upload</span>
+          </button>
+          <!-- Tombol Logout -->
+          <button onclick="logout()" class="w-full text-left px-4 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded flex items-center gap-2">
+            <i class='bx bx-log-out-circle text-lg'></i>
+            <span class="hidden md:inline">Logout</span>
+          </button>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="ml-16 md:ml-64 w-full p-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+        <!-- menu pencarian -->
+        <div class="relative w-full md:w-64">
+          <input type="text" id="searchInput" placeholder="Cari dokumen..."
+            class="pl-10 pr-4 py-2 border rounded-full w-full focus:outline-none focus:ring-2 focus:ring-green-400">
+          <i class='bx bx-search absolute left-3 top-2.5 text-gray-400 text-lg'></i>
+        </div>
+
+        <!-- Kategori dokumen -->
+        <div class="flex overflow-x-auto space-x-2 w-full md:w-auto">
+          <button onclick="filterByKategori('all')" class="kategori-btn px-4 py-1.5 rounded-full bg-gray-100 text-sm font-medium text-gray-700 hover:bg-green-100 active">All</button>
+          <button onclick="filterByKategori('kurikulum')" class="kategori-btn px-4 py-1.5 rounded-full bg-gray-100 text-sm font-medium text-gray-700 hover:bg-green-100">Kurikulum</button>
+          <button onclick="filterByKategori('kesiswaan')" class="kategori-btn px-4 py-1.5 rounded-full bg-gray-100 text-sm font-medium text-gray-700 hover:bg-green-100">Kesiswaan</button>
+          <button onclick="filterByKategori('sarpras')" class="kategori-btn px-4 py-1.5 rounded-full bg-gray-100 text-sm font-medium text-gray-700 hover:bg-green-100">Sarpras</button>
+          <button onclick="filterByKategori('humas')" class="kategori-btn px-4 py-1.5 rounded-full bg-gray-100 text-sm font-medium text-gray-700 hover:bg-green-100">Humas</button>
+          <button onclick="filterByKategori('ketata_usahaan')" class="kategori-btn px-4 py-1.5 rounded-full bg-gray-100 text-sm font-medium text-gray-700 hover:bg-green-100">ketata_usahaan</button>
+        </div>
+      </div>
+      
+      <!-- Progress Upload -->
+      <div id="progressBar" class="w-full bg-gray-200 rounded-full h-2.5 mb-4 hidden">
+        <div id="progressInner"
+          class="bg-green-500 h-2.5 rounded-full transition-all duration-300 ease-in-out"
+          style="width: 0%">
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center mb-4">
+        <!-- menu filter file -->
+        <div class="flex gap-2 my-4 flex-wrap">
+          <button class="filter-btn active" onclick="filterByType('all')">
+            <i class='bx bx-layer'></i> Semua
+          </button>
+          <button class="filter-btn" onclick="filterByType('image')">
+            <i class='bx bx-image'></i> Gambar
+          </button>
+          <button class="filter-btn" onclick="filterByType('pdf')">
+            <i class='bx bxs-file-pdf'></i> PDF
+          </button>
+          <button class="filter-btn" onclick="filterByType('doc')">
+            <i class='bx bxs-file-doc'></i> Word
+          </button>
+          <button class="filter-btn" onclick="filterByType('xls')">
+            <i class='bx bxs-file'></i> Excel
+          </button>
+          <button onclick="showCreateFolderPopup()" class="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm">
+            <box-icon name="folder-plus" type="solid" color="white" size="sm"></box-icon>
+            <span>Buat Folder</span>
+          </button>
+        </div>
+
+        <!-- menu view -->
+        <div class="flex gap-2">
+          <button class="view-btn active" onclick="changeViewMode('extra')" title="Extra Large">
+            <i class='bx bx-grid text-xl text-gray-500'></i>
+          </button>
+          <button class="view-btn" onclick="changeViewMode('large')" title="Large">
+            <i class='bx bx-grid-small text-xl text-gray-500'></i>
+          </button>
+          <button class="view-btn" onclick="changeViewMode('medium')" title="Medium">
+            <i class='bx bx-grid-alt text-xl text-gray-500'></i>
+          </button>
+          <button class="view-btn" onclick="changeViewMode('small')" title="Small">
+            <i class='bx bx-dots-horizontal-rounded text-xl text-gray-500'></i>
+          </button>
+          <button class="view-btn" onclick="changeViewMode('list')" title="List View">
+            <i class='bx bx-list-ul text-xl text-gray-500'></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mb-4">
+        <button id="backButton" onclick="goBackFolder()" class="hidden text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">
+          🔙 Kembali
+        </button>
+        <h2 id="folderTitle" class="text-lg font-semibold text-gray-700"></h2>
+      </div>
+
+      <div id="uploadInFolderWrapper" class="hidden mb-4">
+          <!-- back-folder-menu -->
+          <div id="backButton" class="flex items-center gap-2 mb-4 hidden">
+            <button onclick="goBackFolder()" class="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300">⬅️ Kembali</button>
+            <span id="folderTitle" class="text-gray-600 text-sm"></span>
+          </div>
+
+          <button onclick="showUploadInFolderForm()" class="flex items-center gap-2 bg-blue-500/20 text-blue-700 px-4 py-2 rounded shadow hover:bg-blue-600/30 hover:text-white transition">
+            <box-icon name="upload" type="solid" color="currentColor" size="sm"></box-icon>
+            <span>Upload File ke Folder Ini</span>
+          </button>
+
+          <form id="formUploadInFolder" class="hidden space-y-2" enctype="multipart/form-data">
+            <input type="hidden" name="parent_id" id="uploadParentId">
+            <input type="file" name="files" multiple class="w-full border p-2 rounded" required>
+
+            <div class="flex justify-end gap-2">
+              <button type="submit" class="bg-green-500/20 text-green-700 hover:bg-green-600/30 hover:text-white px-4 py-2 rounded transition">
+                Upload File
+              </button>
+              <button type="button" onclick="cancelUploadToFolder()" class="bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2 rounded transition">
+                Batal
+              </button>
+            </div>
+          </form>
+          <div id="previewIconInFolder" class="flex items-center gap-2 hidden text-sm text-gray-700">
+            <span id="iconPreview">📁</span>
+            <span id="filenamePreview" class="truncate"></span>
+          </div>
+      </div>
+
+      <!-- Galeri dokumen -->
+      <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+    </main>
+  </div>
+
+  <div id="pilihanUpload" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+      <h2 class="text-xl font-bold mb-4">Upload Pilihan</h2>
+      <button onclick="toggleFormUpload()" class="w-full bg-green-500 text-white py-2 rounded mb-2">Upload Data Sekolah</button>
+      <button onclick="alert('Upload Psikologi ditunda')" class="w-full bg-gray-300 py-2 rounded">Upload Psikologi</button>
+      <button onclick="togglePilihanUpload()" class="mt-4 text-sm text-gray-600 hover:underline">Batal</button>
+    </div>
+  </div>
+
+  <!-- UPLOAD DOKUMEN -->
+  <div id="popupUpload" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 items-center justify-center">
+    <div class="bg-white w-full max-w-lg mx-auto p-6 rounded-lg shadow-lg relative animate__animated animate__fadeIn">
+      <button onclick="toggleUploadPopup()" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl">&times;</button>
+      <h2 class="text-xl font-bold mb-4 text-center text-gray-700">Upload Dokumen Sekolah</h2>
+
+      <form id="formDokumen" enctype="multipart/form-data" class="space-y-4">
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Nama File</label>
+          <input type="text" name="nama" required class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-green-400" />
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Kategori</label>
+          <select name="kategori" id="kategoriUpload" required class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-green-400">
+            <option value="">-- Pilih Kategori --</option>
+            <option value="kurikulum">Kurikulum</option>
+            <option value="kesiswaan">Kesiswaan</option>
+            <option value="kesiswaan_prestasi">Kesiswaan - Prestasi</option>
+            <option value="kesiswaan_ekskul">Kesiswaan - Ekskul</option>
+            <option value="ketata_usahaan">TU</option>
+            <option value="humas">Humas</option>
+            <option value="sarpras">Sarpras</option>
+          </select>
+        </div>
+
+        <input type="hidden" name="subkategori" id="subkategoriUpload" />
+
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Upload Dokumen</label>
+
+          <div class="flex gap-2 mb-2">
+            <button type="button" data-mode="file" onclick="toggleUploadOption('file')" class="upload-toggle px-3 py-1 border rounded bg-gray-100 text-sm">File</button>
+            <button type="button" data-mode="folder" onclick="toggleUploadOption('folder')" class="upload-toggle px-3 py-1 border rounded bg-gray-100 text-sm">Folder</button>
+          </div>
+
+          <div id="fileInputWrapper">
+            <input type="file" name="file" id="fileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" class="w-full border rounded p-2" />
+          </div>
+
+          <div id="folderInputWrapper" class="hidden">
+            <input type="file" name="files[]" id="folderInput" webkitdirectory directory multiple class="w-full border rounded p-2" />
+            <p class="text-xs text-gray-500 mt-1">📁 Pilih folder untuk mengupload banyak file sekaligus. (Hanya didukung di Chrome & Edge)</p>
+          </div>
+
+          <div id="previewUpload" class="mt-2 hidden">
+            <img id="previewImgUpload" src="" class="w-32 h-32 object-cover rounded shadow">
+          </div>
+        </div>
+
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white w-full py-2 rounded font-semibold">
+          Upload Dokumen
+        </button>
+      </form>
+
+      <div id="hasil" class="mt-4 text-sm"></div>
+    </div>
+  </div>
+
+  <!-- EDIT DOKUMEN -->
+  <div id="popupEdit" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 items-center justify-center">
+    <div class="bg-white w-full max-w-lg mx-auto p-6 rounded-lg shadow-lg relative">
+      <button onclick="toggleEditPopup()" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl">&times;</button>
+      <h2 class="text-xl font-bold mb-4 text-center text-gray-700">Edit Dokumen</h2>
+
+      <form id="formEditDokumen" enctype="multipart/form-data" class="space-y-4">
+        <input type="hidden" name="id" id="editId" />
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Nama File</label>
+          <input type="text" name="nama" id="editNama" required class="w-full px-4 py-2 border rounded" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Kategori</label>
+          <select name="kategori" id="editKategori" required class="w-full px-4 py-2 border rounded">
+            <option value="">-- Pilih Kategori --</option>
+            <option value="kurikulum">Kurikulum</option>
+            <option value="kesiswaan">Kesiswaan</option>
+            <option value="sarpras">Sarpras</option>
+            <option value="humas">Humas</option>
+            <option value="ketata_usahaan">TU</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Ganti File (Opsional)</label>
+          <input type="file" name="file" class="w-full" />
+          <div id="previewEdit" class="mt-2 hidden">
+            <img id="previewImgEdit" src="" class="w-32 h-32 object-cover rounded shadow">
+          </div>
+        </div>
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white w-full py-2 rounded font-semibold">
+          Simpan Perubahan
+        </button>
+      </form>
+      <div id="hasilEdit" class="mt-4 text-sm"></div>
+    </div>
+  </div>
+
+  <!-- Pop up Create Folder -->
+  <div id="popupCreateFolder" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 items-center justify-center">
+    <div class="bg-white w-full max-w-sm mx-auto p-6 rounded-lg shadow-lg relative animate__animated animate__fadeIn">
+      <button onclick="closeCreateFolderPopup()" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl">&times;</button>
+      <h2 class="text-xl font-bold mb-4 text-center text-gray-700">📁 Buat Folder Baru</h2>
+
+      <form id="formCreateFolder" class="space-y-4">
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Nama Folder</label>
+          <input type="text" name="nama" required class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-yellow-500" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Kategori</label>
+          <select name="kategori" required class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-yellow-500">
+            <option value="">-- Pilih Kategori --</option>
+            <option value="kurikulum">Kurikulum</option>
+            <option value="kesiswaan">Kesiswaan</option>
+            <option value="kesiswaan_prestasi">Kesiswaan - Prestasi</option>
+            <option value="kesiswaan_ekskul">Kesiswaan - Ekskul</option>
+            <option value="humas">Humas</option>
+            <option value="ketata_usahaan">Ketatausahaan</option>
+            <option value="sarpras">Sarpras</option>
+          </select>
+        </div>
+        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white w-full py-2 rounded font-semibold">
+          Buat Folder
+        </button>
+      </form>
+      <div id="hasilCreateFolder" class="mt-3 text-sm"></div>
+    </div>
+  </div>
+
+  <!-- Modal Upload File ke Folder -->
+  <div id="popupUploadInFolder" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded shadow max-w-md w-full relative">
+      <h2 class="text-lg font-bold mb-4">Upload File ke Folder</h2>
+      <form id="formUploadInFolder" enctype="multipart/form-data">
+        <input type="file" name="file" required class="mb-3" />
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Upload</button>
+        <button type="button" onclick="closeUploadInFolder()" class="text-gray-500 ml-2">Batal</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function showCreateFolderPopup() {
+      document.getElementById("popupCreateFolder").classList.remove("hidden");
+      document.getElementById("popupCreateFolder").classList.add("flex");
+    }
+
+    function closeCreateFolderPopup() {
+      document.getElementById("popupCreateFolder").classList.remove("flex");
+      document.getElementById("popupCreateFolder").classList.add("hidden");
+      document.getElementById("formCreateFolder").reset();
+      document.getElementById("hasilCreateFolder").innerHTML = "";
+    }
+
+    // Handle submit form buat folder
+    document.getElementById("formCreateFolder")?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+      const hasil = document.getElementById("hasilCreateFolder");
+
+      try {
+        const res = await fetch("/api/folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nama: formData.get("nama"),
+            kategori: formData.get("kategori"),
+          }),
+        });
+
+        if (!res.ok) throw new Error("Gagal buat folder");
+
+        hasil.innerHTML = `<div class="p-3 bg-green-100 text-green-700 rounded">✅ Folder berhasil dibuat</div>`;
+        loadData("all");
+        setTimeout(() => closeCreateFolderPopup(), 1000);
+      } catch (err) {
+        hasil.innerHTML = `<div class="p-3 bg-red-100 text-red-700 rounded">❌ ${err.message}</div>`;
+      }
+    });
+
+    document.getElementById("folderInput").addEventListener("change", function () {
+      if (this.files.length > 0) {
+        const firstPath = this.files[0].webkitRelativePath;
+        const folderName = firstPath.split("/")[0];
+        document.querySelector("input[name='nama']").value = folderName;
+      }
+    });
+  </script>
+
+  <script>
+    let allData = [];
+    let currentFilter = 'all';
+    let currentKategori = 'all';
+    let currentView = 'extra';
+
+    function togglePilihanUpload() {
+      document.getElementById("pilihanUpload").classList.toggle("hidden");
+      document.getElementById("pilihanUpload").classList.toggle("flex");
+    }
+
+    function toggleFormUpload() {
+      document.getElementById("pilihanUpload").classList.add("hidden");
+      document.getElementById("popupUpload").classList.remove("hidden");
+      document.getElementById("popupUpload").classList.add("flex");
+    }
+
+    function toggleUploadPopup() {
+      document.getElementById("popupUpload").classList.add("hidden");
+    }
+
+    function toggleEditPopup(show = false) {
+      const popup = document.getElementById("popupEdit");
+      popup.classList.toggle("hidden", !show);
+      popup.classList.toggle("flex", show);
+    }
+
+    function showEditPopup(doc) {
+    document.getElementById("editId").value = doc.id;
+    document.getElementById("editNama").value = doc.nama || "";
+    document.getElementById("editKategori").value = doc.kategori || "";
+
+    const ext = (doc.tipe_file || doc.path.split('.').pop() || "").replace(".", "").toLowerCase();
+    const previewBox = document.getElementById("previewEdit");
+    const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
+    const isPdf = ext === "pdf";
+    const isWord = ["doc", "docx"].includes(ext);
+    const isExcel = ["xls", "xlsx", "csv"].includes(ext);
+
+    const fileUrl = `/${doc.path.replaceAll("\\", "/")}`;
+
+    // Tampilkan preview sesuai tipe file
+    if (isImage) {
+      previewBox.innerHTML = `
+        <img id="previewImgEdit" src="${fileUrl}" alt="${doc.nama}" class="w-32 h-32 object-cover rounded shadow">
+      `;
+    } else {
+      const icon = isPdf ? "📕 PDF"
+                  : isWord ? "📄 Word"
+                  : isExcel ? "📊 Excel"
+                  : "📁 File";
+
+      previewBox.innerHTML = `
+        <div class="flex items-center gap-2 text-sm bg-gray-100 p-2 rounded shadow">
+          <span class="text-2xl">${icon}</span>
+          <span class="truncate">${doc.nama_file || 'File Sebelumnya'}</span>
+        </div>
+      `;
+    }
+
+    previewBox.classList.remove("hidden");
+    toggleEditPopup(true);
+  }
+
+
+    function getFileIcon(tipe) {
+      if (!tipe) return "📄";
+      tipe = tipe.toLowerCase();
+      if (["jpg", "jpeg", "png", "gif"].includes(tipe)) return "🖼️";
+      if (["pdf"].includes(tipe)) return "📕";
+      if (["doc", "docx"].includes(tipe)) return "📄";
+      if (["xls", "xlsx"].includes(tipe)) return "📊";
+      return "📁";
+    }
+
+    function changeViewMode(mode) {
+      currentView = mode;
+      document.querySelectorAll(".view-btn").forEach(btn => btn.classList.remove("active"));
+      event.currentTarget.classList.add("active");
+      applyFilter();
+    }
+
+    function applyFilter() {
+      const filtered = allData.filter(doc => {
+        const extRaw = doc.tipe_file || doc.path.split(".").pop();
+        const ext = extRaw.replace(".", "").toLowerCase();
+
+        const matchKategori = currentKategori === 'all' || doc.kategori === currentKategori;
+
+        let matchType = true;
+        if (currentFilter === "image") matchType = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
+        else if (currentFilter === "pdf") matchType = ext === "pdf";
+        else if (currentFilter === "doc") matchType = ["doc", "docx"].includes(ext);
+        else if (currentFilter === "xls") matchType = ["xls", "xlsx", "csv"].includes(ext);
+
+        return matchKategori && matchType;
+      });
+
+      renderGallery(filtered);
+    }
+
+    // ===============================
+    // 📁 Advanced File Grid with Action Menu
+    // ===============================
+
+    let currentFolderId = null;
+    function openFolder(folderId) {
+      folderHistory.push([...allData]);
+
+      fetch(`/folder/${folderId}`)
+        .then(res => res.json())
+        .then(data => {
+          folderHistory.push(allData); // Simpan history sebelumnya
+          allData = data;
+          renderGallery(allData);
+
+          // ✅ Tampilkan tombol & form upload ke folder
+          document.getElementById("uploadInFolderWrapper").classList.remove("hidden");
+          document.getElementById("uploadParentId").value = folderId;
+
+          // ✅ Tampilkan tombol kembali & judul folder
+          document.getElementById("backButton").classList.remove("hidden");
+
+          // Ambil nama folder dari dokumen terakhir jika ada
+          const folder = data.find(d => d.parent_id === folderId) || {};
+          document.getElementById("folderTitle").innerText = folder.nama || "Folder";
+        })
+        .catch(err => {
+          alert("❌ Gagal membuka folder");
+        });
+    }
+
+    function renderGallery(data) {
+      const gallery = document.getElementById("gallery");
+      gallery.innerHTML = "";
+
+      // Reset class gallery
+      gallery.className = "";
+      gallery.classList.add("gap-4", "mb-10");
+
+      if (!data.length) {
+        gallery.innerHTML = `<p class="text-gray-500">Tidak ada dokumen ditemukan</p>`;
+        return;
+      }
+
+      // === 🔁 MODE LIST VIEW ===
+      if (currentView === "list") {
+        gallery.classList.add("flex", "flex-col", "space-y-1");
+
+        data.forEach(doc => {
+          const ext = (doc.tipe_file || doc.path?.split(".").pop() || "").toLowerCase();
+          const isFolder = doc.is_folder || !ext;  // fallback jika file lama tidak punya ext
+          const tanggal = new Date(doc.uploaded_at || doc.created_at || Date.now()).toLocaleDateString("id-ID");
+
+          let icon = `<box-icon name="file-blank" type="solid" color="#9CA3AF" size="sm"></box-icon>`;
+          if (isFolder) {
+            icon = `<box-icon name="folder" type="solid" color="#F59E0B" size="sm"></box-icon>`;
+          } else if (ext === "pdf") {
+            icon = `<box-icon name="file-pdf" type="solid" color="#EF4444" size="sm"></box-icon>`;
+          } else if (["doc", "docx"].includes(ext)) {
+            icon = `<box-icon name="file-word" type="solid" color="#3B82F6" size="sm"></box-icon>`;
+          } else if (["xls", "xlsx", "csv"].includes(ext)) {
+            icon = `<box-icon name="file-excel" type="solid" color="#10B981" size="sm"></box-icon>`;
+          } else if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
+            icon = `<box-icon name="image" type="solid" color="#6B7280" size="sm"></box-icon>`;
+          }
+
+          const row = document.createElement("div");
+          row.className = "flex items-center justify-between px-2 py-1 text-sm text-gray-700 hover:bg-gray-50 rounded";
+
+          row.innerHTML = `
+            <div class="flex items-center gap-2 cursor-pointer" onclick="${isFolder ? `openFolder(${doc.id})` : ''}">
+              <div>${icon}</div>
+              <div class="truncate w-40">${doc.nama}</div>
+            </div>
+            <div class="flex items-center gap-4 text-xs text-gray-500 relative">
+              <span>${tanggal}</span>
+              <button onclick="toggleDropdown(event, ${doc.id})" class="text-gray-400 hover:text-gray-600">
+                <box-icon name='dots-vertical-rounded' size="xs"></box-icon>
+              </button>
+              <div id="dropdown-${doc.id}" class="hidden absolute right-0 top-6 bg-white border rounded shadow z-20 text-left text-sm w-36">
+                <button onclick='showEditPopup(${JSON.stringify(doc)})' class="block w-full px-4 py-2 hover:bg-gray-100 text-blue-600">✏️ Edit</button>
+                ${!isFolder ? `<a href='/${doc.path?.replace(/\\/g, "/")}' download class="block px-4 py-2 hover:bg-gray-100 text-green-600">⬇️ Download</a>` : ""}
+                <button onclick='hapusDokumen(${doc.id})' class="block w-full px-4 py-2 hover:bg-gray-100 text-red-600">🗑️ Hapus</button>
+              </div>
+            </div>
+          `;
+
+          gallery.appendChild(row);
+        });
+        return;
+      }
+
+      // === 🔳 MODE GRID VIEW ===
+      gallery.classList.add("grid");
+      if (currentView === "extra") gallery.classList.add("grid-cols-1", "sm:grid-cols-2", "md:grid-cols-3");
+      if (currentView === "large") gallery.classList.add("grid-cols-2", "md:grid-cols-4");
+      if (currentView === "medium") gallery.classList.add("grid-cols-3", "md:grid-cols-5");
+      if (currentView === "small") gallery.classList.add("grid-cols-4", "md:grid-cols-6");
+
+      data.forEach(doc => {
+        const ext = (doc.tipe_file || doc.path?.split(".").pop() || "").toLowerCase();
+        const isFolder = doc.is_folder;
+        const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
+        const isPdf = ext === "pdf";
+        const isWord = ["doc", "docx"].includes(ext);
+        const isExcel = ["xls", "xlsx", "csv"].includes(ext);
+        const tanggal = new Date(doc.uploaded_at || doc.created_at || Date.now()).toLocaleDateString("id-ID");
+
+        let content = "";
+        if (isFolder) {
+          content = `<box-icon name="folder" type="solid" color="#F59E0B" size="lg" class="mb-2"></box-icon>`;
+        } else if (isImage) {
+          content = `<img src="/${doc.path.replace(/\\/g, "/")}" alt="${doc.nama}" class="h-32 object-cover rounded mb-2" loading="lazy">`;
+        } else if (isPdf) {
+          content = `<box-icon name="file-pdf" type="solid" color="#EF4444" size="lg" class="mb-2"></box-icon>`;
+        } else if (isWord) {
+          content = `<box-icon name="file" type="solid" color="#3B82F6" size="lg" class="mb-2"></box-icon>`;
+        } else if (isExcel) {
+          content = `<box-icon name="file" type="solid" color="#10B981" size="lg" class="mb-2"></box-icon>`;
+        } else {
+          content = `<box-icon name="file-blank" type="solid" color="#9CA3AF" size="lg" class="mb-2"></box-icon>`;
+        }
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "bg-white rounded shadow p-2 relative group hover:shadow-md transition flex flex-col items-center text-center";
+
+        if (isFolder) {
+          wrapper.classList.add("cursor-pointer", "hover:bg-yellow-50");
+          wrapper.onclick = () => openFolder(doc.id);
+        }
+
+        wrapper.innerHTML = `
+          ${content}
+          <div class="text-sm text-center">
+            <p class="font-medium truncate w-32">${doc.nama}</p>
+            ${!isFolder ? `<p class="text-xs text-gray-500">${doc.kategori || ""}</p>` : ""}
+            <p class="text-xs text-gray-400">${tanggal}</p>
+          </div>
+          <button onclick="toggleDropdown(event, ${doc.id})"
+            class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 focus:outline-none z-10">
+            <box-icon name='dots-vertical-rounded'></box-icon>
+          </button>
+          <div id="dropdown-${doc.id}" class="hidden absolute right-2 top-10 bg-white border rounded shadow z-20 text-left text-sm w-36">
+            <button onclick='showEditPopup(${JSON.stringify(doc)})' class="block w-full px-4 py-2 hover:bg-gray-100 text-blue-600">✏️ Edit</button>
+            ${!isFolder ? `<a href='/${doc.path?.replace(/\\/g, "/")}' download class="block px-4 py-2 hover:bg-gray-100 text-green-600">⬇️ Download</a>` : ""}
+            <button onclick='hapusDokumen(${doc.id})' class="block w-full px-4 py-2 hover:bg-gray-100 text-red-600">🗑️ Hapus</button>
+          </div>
+        `;
+        gallery.appendChild(wrapper);
+      });
+    }
+
+    // ===============================
+    // 🧠 Dropdown Toggle Script
+    // ===============================
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.group')) {
+        document.querySelectorAll('[id^="dropdown-"]').forEach(el => el.classList.add('hidden'));
+      }
+    });
+
+    function toggleDropdown(event, id) {
+      event.stopPropagation();
+      document.querySelectorAll('[id^="dropdown-"]').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`dropdown-${id}`);
+      if (target) target.classList.toggle("hidden");
+    }
+
+    function filterByType(type) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      const btn = document.querySelector(`.filter-btn[onclick*="${type}"]`);
+      if (btn) btn.classList.add('active');
+      applyFilter();
+    }
+
+    function filterByKategori(kategori) {
+      currentKategori = kategori;
+
+      // Reset semua tombol kategori ke style default
+      document.querySelectorAll('.kategori-btn').forEach(btn => {
+        btn.classList.remove('bg-green-600', 'text-white', 'border-green-700');
+        btn.classList.add('bg-gray-100', 'text-gray-700');
+      });
+
+      // Cari dan aktifkan tombol yang cocok berdasarkan teks kategori
+      const buttons = document.querySelectorAll('.kategori-btn');
+      buttons.forEach(btn => {
+        const btnKategori = btn.textContent.trim().toLowerCase();
+        if (btnKategori === kategori.trim().toLowerCase()) {
+          btn.classList.remove('bg-gray-100', 'text-gray-700');
+          btn.classList.add('bg-green-600', 'text-white', 'border-green-700');
+        }
+      });
+
+      applyFilter();
+    }
+
+    function loadData() {
+      document.getElementById("backButton").classList.add("hidden");
+      document.getElementById("folderTitle").innerText = "";
+
+      const gallery = document.getElementById("gallery");
+      gallery.innerHTML = '<div class="text-center text-gray-500">Memuat data...</div>';
+
+      fetch("/dokumen")
+        .then(res => res.json())
+        .then(data => {
+          allData = data;
+          applyFilter();
+        })
+        .catch(err => {
+          gallery.innerHTML = '<p class="text-red-500">Gagal memuat data dokumen</p>';
+          console.error("Gagal fetch dokumen:", err);
+        });
+    }
+
+
+    document.getElementById("searchInput")?.addEventListener("input", function () {
+      const keyword = this.value.toLowerCase();
+      const filtered = allData.filter(d => d.nama.toLowerCase().includes(keyword));
+      renderGallery(filtered);
+    });
+
+    async function hapusDokumen(id) {
+      const konfirmasi = confirm("Yakin ingin menghapus dokumen ini?");
+      if (!konfirmasi) return;
+      const res = await fetch(`/hapus-dokumen/${id}`, { method: "DELETE" });
+      if (res.ok) loadData('all');
+    }
+
+    // Upload dokumen
+    document.getElementById("formDokumen")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+      const hasilEl = document.getElementById("hasil");
+      const bar = document.getElementById("progressBar");
+      const inner = document.getElementById("progressInner");
+
+      // Tampilkan progress bar
+      bar.classList.remove("hidden");
+      inner.style.width = "0%";
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/upload-dokumen", true);
+
+      // Event saat upload berlangsung
+      xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+          const percent = (e.loaded / e.total) * 100;
+          inner.style.width = `${percent}%`;
+        }
+      };
+
+      xhr.onload = function () {
+        bar.classList.add("hidden");
+        inner.style.width = "0%";
+
+        if (xhr.status === 200) {
+          let hasil;
+          try {
+            hasil = JSON.parse(xhr.responseText);
+          } catch (err) {
+            hasilEl.innerHTML = `<div class="p-3 bg-red-100 text-red-700 rounded">❌ Respon tidak valid.</div>`;
+            return;
+          }
+
+          if (Array.isArray(hasil.data)) {
+            // Jika folder, tampilkan nama + jumlah file
+            const namaFolder = formData.get("nama") || "Folder";
+            hasilEl.innerHTML = `<div class="p-3 bg-green-100 text-green-700 rounded">
+              ✅ <strong>${namaFolder}</strong> berhasil diupload (${hasil.data.length} file).
+            </div>`;
+          } else if (hasil.data?.nama) {
+            // Jika file tunggal
+            hasilEl.innerHTML = `<div class="p-3 bg-green-100 text-green-700 rounded">
+              ✅ <strong>${hasil.data.nama}</strong> berhasil diupload.
+            </div>`;
+          } else {
+            hasilEl.innerHTML = `<div class="p-3 bg-green-100 text-green-700 rounded">
+              ✅ Upload berhasil.
+            </div>`;
+          }
+
+          form.reset();
+          loadData("all");
+
+        } else {
+          hasilEl.innerHTML = `<div class="p-3 bg-red-100 text-red-700 rounded">
+            ❌ Gagal upload dokumen.
+          </div>`;
+        }
+      };
+
+      xhr.onerror = function () {
+        bar.classList.add("hidden");
+        inner.style.width = "0%";
+        hasilEl.innerHTML = `<div class="p-3 bg-red-100 text-red-700 rounded">
+          ❌ Terjadi kesalahan koneksi.
+        </div>`;
+      };
+
+      xhr.send(formData);
+    });
+
+
+    document.getElementById("formEditDokumen")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const id = document.getElementById("editId").value;
+      const formData = new FormData(form);
+      const hasil = document.getElementById("hasilEdit");
+
+      try {
+        const res = await fetch(`/edit-dokumen/${id}`, {
+          method: "POST",
+          body: formData
+        });
+
+        const json = await res.json();
+
+        if (res.ok) {
+          hasil.innerHTML = `<div class="p-3 bg-green-100 text-green-700 rounded">✅ Dokumen berhasil diperbarui</div>`;
+          loadData("all");
+          setTimeout(() => toggleEditPopup(false), 1000);
+        } else {
+          throw new Error(json.message || "Gagal memperbarui dokumen.");
+        }
+      } catch (err) {
+        hasil.innerHTML = `<div class="p-3 bg-red-100 text-red-700 rounded">❌ ${err.message}</div>`;
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "/admin-login.html";
+    }
+    loadData('all');
+</script>
+
+<script>
+  // Preview saat upload
+  document.querySelector('#formDokumen input[name="file"]')?.addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById("previewUpload");
+    const img = document.getElementById("previewImgUpload");
+    if (file && file.type.startsWith("image/")) {
+      img.src = URL.createObjectURL(file);
+      preview.classList.remove("hidden");
+    } else {
+      preview.classList.add("hidden");
+    }
+  });
+
+  // Preview saat edit (opsional)
+  document.querySelector('#formEditDokumen input[name="file"]')?.addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById("previewEdit");
+    const img = document.getElementById("previewImgEdit");
+    if (file && file.type.startsWith("image/")) {
+      img.src = URL.createObjectURL(file);
+      preview.classList.remove("hidden");
+    } else {
+      preview.classList.add("hidden");
+    }
+  });
+
+  function toggleUploadOption(mode) {
+    const fileWrapper = document.getElementById("fileInputWrapper");
+    const folderWrapper = document.getElementById("folderInputWrapper");
+
+    // Reset semua tombol
+    document.querySelectorAll(".upload-toggle").forEach(btn => {
+      btn.classList.remove("active");
+    });
+
+    // Tampilkan sesuai mode
+    if (mode === 'file') {
+      fileWrapper.classList.remove("hidden");
+      folderWrapper.classList.add("hidden");
+    } else {
+      fileWrapper.classList.add("hidden");
+      folderWrapper.classList.remove("hidden");
+    }
+
+    // Aktifkan tombol yang sesuai
+    document.querySelector(`.upload-toggle[data-mode="${mode}"]`)?.classList.add("active");
+  }
+
+
+  // Preview untuk file tunggal
+  document.getElementById("fileInput")?.addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById("previewUpload");
+    const img = document.getElementById("previewImgUpload");
+    if (file && file.type.startsWith("image/")) {
+      img.src = URL.createObjectURL(file);
+      preview.classList.remove("hidden");
+    } else {
+      preview.classList.add("hidden");
+    }
+  });
+
+  let folderHistory = [];
+
+  function openFolder(folderId) {
+    folderHistory.push([...allData]); // Simpan data saat ini ke history
+
+    fetch(`/folder/${folderId}`)
+      .then(res => res.json())
+      .then(data => {
+        allData = data;
+
+        // ✅ Tampilkan tombol upload ke folder
+        document.getElementById("uploadInFolderWrapper").classList.remove("hidden");
+        document.getElementById("uploadParentId").value = folderId;
+
+        // ✅ Tampilkan tombol kembali dan judul folder
+        document.getElementById("backButton").classList.remove("hidden");
+        document.getElementById("folderTitle").innerText = "📁 Isi Folder";
+
+        applyFilter();
+      })
+      .catch(err => {
+        alert("❌ Gagal membuka folder");
+      });
+  }
+
+  function goBackFolder() {
+    if (folderHistory.length > 0) {
+      allData = folderHistory.pop();
+      renderGallery(allData);
+
+      //Sembunyikan upload ke folder
+      document.getElementById("uploadInFolderWrapper").classList.add("hidden");
+      document.getElementById("uploadParentId").value = "";
+
+      //Sembunyikan tombol kembali & judul folder
+      document.getElementById("backButton").classList.add("hidden");
+      document.getElementById("folderTitle").innerText = "";
+    }
+  }
+
+  function showUploadInFolderForm() {
+    const form = document.getElementById("formUploadInFolder");
+    form.classList.toggle("hidden");
+  }
+
+  function cancelUploadToFolder() {
+    const form = document.getElementById("formUploadInFolder");
+    form.reset();
+    form.classList.add("hidden");
+  }
+
+  document.getElementById("formUploadInFolder")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+
+      try {
+        const res = await fetch("/api/upload-multiple", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error("Gagal upload ke folder");
+
+        alert("✅ Berhasil upload ke folder");
+        form.reset();
+        form.classList.add("hidden");
+        openFolder(formData.get("parent_id")); // reload isi folder
+      } catch (err) {
+        alert("❌ Gagal: " + err.message);
+      }
+    });
+
+    // fungsi upload file sub folder
+    document.querySelector('#formUploadInFolder input[name="files"]')?.addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById("previewIconInFolder");
+      const iconSpan = document.getElementById("iconPreview");
+      const nameSpan = document.getElementById("filenamePreview");
+
+      if (file) {
+        const ext = file.name.split(".").pop().toLowerCase();
+        let icon = "📁";
+
+        if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) icon = "🖼️";
+        else if (ext === "pdf") icon = "📕";
+        else if (["doc", "docx"].includes(ext)) icon = "📄";
+        else if (["xls", "xlsx", "csv"].includes(ext)) icon = "📊";
+        else icon = "📁";
+
+        iconSpan.innerText = icon;
+        nameSpan.innerText = file.name;
+        preview.classList.remove("hidden");
+      } else {
+        preview.classList.add("hidden");
+      }
+    });
+
+</script>
+</body>
+</html>

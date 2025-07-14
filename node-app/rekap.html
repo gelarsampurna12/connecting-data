@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rekap Data Siswa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-5xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-center">📊 Rekap Data Siswa</h1>
+
+    <div class="mb-4 flex justify-between items-center">
+      <input type="text" id="searchInput" placeholder="Cari nama siswa..." class="border px-4 py-2 rounded w-1/2">
+      <a href="/export-excel" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">⬇️ Export Excel</a>
+    </div>
+
+    <table class="table-auto w-full bg-white shadow-md rounded overflow-hidden">
+      <thead class="bg-blue-600 text-white">
+        <tr>
+          <th class="px-4 py-2">Nama</th>
+          <th class="px-4 py-2">Potensi</th>
+          <th class="px-4 py-2">Nilai</th>
+          <th class="px-4 py-2">Kehadiran</th>
+          <th class="px-4 py-2">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tabelData" class="divide-y divide-gray-200"></tbody>
+    </table>
+  </div>
+
+  <!-- Modal Edit (dinamis) -->
+  <div id="modalEdit" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-10">
+    <div class="bg-white p-6 rounded shadow max-w-md w-full">
+      <h2 class="text-xl font-bold mb-4">Edit Data</h2>
+      <form id="formEdit">
+        <input type="hidden" id="editId">
+        <label class="block mb-2">Nama:
+          <input type="text" id="editNama" class="w-full border px-2 py-1 rounded" required>
+        </label>
+        <label class="block mb-2">Nilai Psikotes:
+          <input type="number" id="editNilai" class="w-full border px-2 py-1 rounded" required>
+        </label>
+        <label class="block mb-2">Kehadiran:
+          <input type="number" id="editKehadiran" class="w-full border px-2 py-1 rounded" required>
+        </label>
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" onclick="closeModal()" class="px-4 py-1 bg-gray-400 text-white rounded">Batal</button>
+          <button type="submit" class="px-4 py-1 bg-blue-600 text-white rounded">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    async function fetchData() {
+      const res = await fetch('/rekap');
+      const data = await res.json();
+      renderTable(data);
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById("tabelData");
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      tbody.innerHTML = "";
+
+      data.filter(s => s.nama.toLowerCase().includes(search)).forEach(s => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="px-4 py-2">${s.nama}</td>
+            <td class="px-4 py-2">${s.potensi}</td>
+            <td class="px-4 py-2 text-center">${s.nilai}</td>
+            <td class="px-4 py-2 text-center">${s.kehadiran}%</td>
+            <td class="px-4 py-2 text-center space-x-2">
+              <button onclick="showEdit(${s.id}, '${s.nama}', ${s.nilai}, ${s.kehadiran})" class="bg-yellow-400 text-white px-2 py-1 rounded">✏️</button>
+              <button onclick="hapus(${s.id})" class="bg-red-600 text-white px-2 py-1 rounded">🗑️</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function showEdit(id, nama, nilai, kehadiran) {
+      document.getElementById("modalEdit").classList.remove("hidden");
+      document.getElementById("editId").value = id;
+      document.getElementById("editNama").value = nama;
+      document.getElementById("editNilai").value = nilai;
+      document.getElementById("editKehadiran").value = kehadiran;
+    }
+
+    function closeModal() {
+      document.getElementById("modalEdit").classList.add("hidden");
+    }
+
+    async function hapus(id) {
+      if (confirm("Yakin ingin menghapus data ini?")) {
+        await fetch(`/hapus/${id}`, { method: 'DELETE' });
+        fetchData();
+      }
+    }
+
+    document.getElementById("formEdit").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("editId").value;
+      const nama = document.getElementById("editNama").value;
+      const nilai = parseFloat(document.getElementById("editNilai").value);
+      const kehadiran = parseFloat(document.getElementById("editKehadiran").value);
+
+      await fetch(`/edit/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nama, nilai, kehadiran })
+      });
+
+      closeModal();
+      fetchData();
+    });
+
+    document.getElementById("searchInput").addEventListener("input", fetchData);
+
+    fetchData();
+  </script>
+</body>
+</html>

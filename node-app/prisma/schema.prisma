@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"      // ✅ ini yang benar
+  url      = env("DATABASE_URL")
+}
+
+model Siswa {
+  id          Int      @id @default(autoincrement())
+  nama        String
+  nilai       Float
+  kehadiran   Float
+  potensi     String
+  file        String
+  uploaded_at DateTime @default(now())
+}
+
+model Admin {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+}
+
+model Dokumen {
+  id          Int       @id @default(autoincrement())
+  nama        String
+  kategori    String
+  subkategori String?
+  nama_file   String?
+  path        String
+  tipe_file   String?
+  uploaded_at DateTime  @default(now())
+
+  // FOLDER SUPPORT
+  parent_id   Int? 
+  parent      Dokumen? @relation("FolderParent", fields: [parent_id], references: [id])
+  children    Dokumen[] @relation("FolderParent")
+}
+
+
+
+
+

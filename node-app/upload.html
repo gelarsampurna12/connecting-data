@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload & Prediksi Potensi Siswa</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #hasil {
+      margin-top: 30px;
+      padding: 20px;
+      background: #e9f7ef;
+      border-left: 5px solid #28a745;
+      border-radius: 6px;
+      font-size: 15px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Form Prediksi Potensi Siswa</h2>
+    <form id="formSiswa" enctype="multipart/form-data">
+      <label for="nama">Nama</label>
+      <input type="text" name="nama" required>
+
+      <label for="nilai_psikotes">Nilai Psikotes</label>
+      <input type="number" name="nilai_psikotes" required>
+
+      <label for="kehadiran">Kehadiran (%)</label>
+      <input type="number" name="kehadiran" required>
+
+      <label for="file">Upload Gambar (opsional)</label>
+      <input type="file" name="file" accept="image/*">
+
+      <button type="submit">Upload & Prediksi</button>
+    </form>
+
+    <div id="hasil"></div>
+  </div>
+
+  <script>
+    document.getElementById("formSiswa").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+
+      const res = await fetch("http://localhost:3000/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      const hasil = await res.json();
+
+      if (hasil.data) {
+        const data = hasil.data;
+        document.getElementById("hasil").innerHTML = `
+          <h3>Hasil:</h3>
+          <p><strong>Nama:</strong> ${data.nama}</p>
+          <p><strong>Potensi:</strong> ${data.potensi}</p>
+          <p><strong>Nilai Psikotes:</strong> ${data.nilai}</p>
+          <p><strong>Kehadiran:</strong> ${data.kehadiran}%</p>
+          <p><strong>File Upload:</strong> ${data.file}</p>
+        `;
+      } else {
+        document.getElementById("hasil").innerHTML = `<p style="color:red;">${hasil.error || 'Gagal memproses data'}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
